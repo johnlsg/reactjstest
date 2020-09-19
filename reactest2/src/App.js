@@ -12,7 +12,7 @@ const image = require('./image.jpg');
 const image2 = require('./image2.PNG');
 const imgCircle= require('./circle.png')
 const image3 = require('./image3.jpg')
-
+const imgSearch = require('./search.png')
 
 
 
@@ -20,32 +20,37 @@ const image3 = require('./image3.jpg')
 class App extends React.Component{
   constructor(props) {
     super(props);
+    const marks = props.marks ? props.marks.map((val)=>{
+      return {
+        ...val,
+        isHide:false,
+        offsetX:0,
+        offSetY:0
+      }
+
+    }):[]
     this.state = {
-      marks:[],
+      marks:marks,
       mx:0,
       my:0,
       imgSize:0
     };
   }
 
+
+
   ovl = (isZoom) =>{
     const handleClick = (e)=>{
-      console.log("div clicked")
-      console.log(e.clientX)
-      console.log(e.clientY)
-      console.log(e.pageX)
-      console.log(e.pageY)
       const {offsetTop,offsetLeft} = document.getElementById("bodyMag")
-      let x = e.pageX-offsetLeft
-      let y = e.pageY-offsetTop
-      console.log(x)
-      console.log(y)
+      let x = e.pageX-offsetLeft-this.props.markOffsetX-this.props.bodyMagBorderWidth
+      let y = e.pageY-offsetTop-this.props.markOffsetY-this.props.bodyMagBorderWidth
       let marker = this.state.marks.slice()
-      const markId = marker.length
+      // const markId = marker.length
       marker.push({
-        id:markId,
-        x:x-5-3,
-        y:y-5-3,
+        // id:markId,
+        x:x,
+        y:y,
+        hoverText:`This is mark ${x}, ${y}`,
         isHide:false,
         offsetX:0,
         offSetY:0
@@ -55,25 +60,25 @@ class App extends React.Component{
 
     const handleMove = (e)=>{
       const {offsetTop,offsetLeft,offsetWidth} = document.getElementById("bodyMag")
-      let cursorX = e.pageX-offsetLeft
-      let cursorY = e.pageY-offsetTop
+      let cursorX = e.pageX-offsetLeft-this.props.bodyMagBorderWidth
+      let cursorY = e.pageY-offsetTop-this.props.bodyMagBorderWidth
       this.setState({mx:cursorX,my:cursorY})
       const newMarks = this.state.marks.map((val)=>{
-        let dist = Math.pow((val.x+5) - (cursorX-3),2) + Math.pow((val.y+5)-(cursorY-3), 2)
+        const markAnchorX = val.x+this.props.markOffsetX
+        const markAnchorY = val.y+this.props.markOffsetY
+        const dist = Math.pow((markAnchorX) - (cursorX),2) + Math.pow((markAnchorY)-(cursorY), 2)
+        // magnifiedRange = glassMagnifierSizeInPercent * offsetWidth - 2*glassMagnifierBorderWidth
         const magnifiedRange = (0.25*offsetWidth-6)/this.state.imgSize*offsetWidth
+        const magnifyRate = this.state.imgSize/offsetWidth
         if(dist< Math.pow(magnifiedRange/2,2)){
-          const curX = cursorX-3
-          const curY = cursorY-3
-          const markX = val.x+5
-          const markY = val.y+5
-          // const magX = (50/7)*(markX-curX)
-          // const magY = (50/7)*(markY-curY)
-          const magX = (7.016)*(markX-curX)
-          const magY = (7.016)*(markY-curY)
+          const curX = cursorX
+          const curY = cursorY
+          const magX = (magnifyRate)*(markAnchorX-curX)
+          const magY = (magnifyRate)*(markAnchorY-curY)
           const finalX = magX + curX
           const finalY = magY + curY
-          const diffX = finalX - markX
-          const diffY = finalY - markY
+          const diffX = finalX - markAnchorX
+          const diffY = finalY - markAnchorY
           return {...val, isHide:false, offsetX: diffX, offsetY: diffY}
         }else if( dist< Math.pow((0.5*0.25 * offsetWidth)+3,2)){
           return {...val,isHide:true, offsetX:0, offsetY:0}
@@ -83,29 +88,49 @@ class App extends React.Component{
       this.setState({marks:newMarks})
     }
     const style = {
-      "position":"absolute",
-      "display":"block",
-      "backgroundColor": "none",
-      "zIndex":3,
-      "left":"0px",
-      "top":"0px",
-      "opacity":"1",
-      "width":"100%",
-      "height":"100%"
+      position:"absolute",
+      display:"block",
+      backgroundColor: "none",
+      zIndex:3,
+      left:"0px",
+      top:"0px",
+      width:"100%",
+      height:"100%"
     }
     return(
       <div style={style} onClick={handleClick} onMouseMove={handleMove}>
         <p>{this.state.mx},{this.state.my}</p>
         {this.state.marks.map((value)=>{
           const styleMark = {
+            width:this.props.markWidth,
+            height:this.props.markHeight,
+            display:"inherit",
+            opacity:"inherit",
+          }
+          const styleMarkDiv = {
             position:"absolute",
             top:value.y,
             left:value.x,
-            width:"10px",
             display:(value.isHide)?"none":"block",
-            transform:`translate(${value.offsetX}px,${value.offsetY}px)`
+            opacity:".75",
+            transform:`translate(${value.offsetX}px,${value.offsetY}px)`,
+            textAlign:"center",
           }
-          return <img key={value.id} src={imgCircle} style={styleMark}/>
+          const styleMarkHoverTxt = {
+            position:"absolute",
+            display:"inline-block",
+            transform: "translate(-50%, -110%)",
+            minWidth:"150px"
+          }
+
+          return (
+            <div className="markDiv" key={value.x*value.y} style={styleMarkDiv} onMouseOver={()=>{console.log("icon hovered")}}>
+              <div className="hoverTxt" style={styleMarkHoverTxt}>
+                {value.hoverText}
+              </div>
+              <img src={imgSearch} style={styleMark} onClick={(e)=>{e.stopPropagation(); console.log(value.id+" clicked")}}/>
+            </div>
+            )
 
 
         })}
@@ -116,12 +141,11 @@ class App extends React.Component{
 
   render(){
     const style = {
-      "position":"absolute",
-      "width":"500px",
-      "top":"100px",
-      "left":"50px",
-      "borderStyle":"solid",
-      "overflow":"hidden"
+      position:"absolute",
+      width:"500px",
+      borderStyle:"solid",
+      borderWidth:this.props.bodyMagBorderWidth,
+      overflow:"hidden"
     }
     return (
     <div id="bodyMag" style={style}>
@@ -136,6 +160,22 @@ class App extends React.Component{
     </div>
     )
   }
+}
+
+App.defaultProps = {
+  "bodyMagBorderWidth":3,
+  "markOffsetX":25,
+  "markOffsetY":25,
+  "markHeight":50,
+  "markWidth":50,
+  "marks":[
+    {x:105,y:342,hoverText:"Hand"},
+    {x:181,y:424,hoverText:"Leg"},
+    {x:166,y:209,hoverText:"Arm"},
+    {x:230,y:260,hoverText:"Abdomen"},
+    {x:233,y:175,hoverText:"Chest"},
+    {x:225,y:75,hoverText:"Face"}
+  ]
 }
 
 export default App

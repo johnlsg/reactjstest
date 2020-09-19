@@ -4,3 +4,11 @@
     position:absolute;
     z-index:2;
 }
+.markDiv:hover .hoverTxt {
+    visibility:visible;
+
+}
+
+.hoverTxt{
+    visibility: hidden;
+}
