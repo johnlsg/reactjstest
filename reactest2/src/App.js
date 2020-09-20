@@ -33,7 +33,7 @@ class App extends React.Component{
       marks:marks,
       mx:0,
       my:0,
-      imgSize:0
+      imgSize:0,
     };
   }
 
@@ -45,7 +45,6 @@ class App extends React.Component{
       let x = e.pageX-offsetLeft-this.props.markOffsetX-this.props.bodyMagBorderWidth
       let y = e.pageY-offsetTop-this.props.markOffsetY-this.props.bodyMagBorderWidth
       let marker = this.state.marks.slice()
-      // const markId = marker.length
       marker.push({
         // id:markId,
         x:x,
@@ -128,7 +127,7 @@ class App extends React.Component{
               <div className="hoverTxt" style={styleMarkHoverTxt}>
                 {value.hoverText}
               </div>
-              <img src={imgSearch} style={styleMark} onClick={(e)=>{e.stopPropagation(); console.log(value.id+" clicked")}}/>
+              <img src={this.props.markImg} style={styleMark} onClick={(e)=>{e.stopPropagation(); console.log(`${value.x} ${value.y} clicked`)}}/>
             </div>
             )
 
@@ -155,7 +154,22 @@ class App extends React.Component{
         imageAlt="Example"
         renderOverlay={this.ovl}
         cursorStyle="crosshair"
-        onImageLoad={(e)=>{this.setState({imgSize:e.target.naturalWidth})}}
+        onImageLoad={(e)=>{
+            if(this.props.magnifyRate){
+              this.setState({imgSize:`${(style.width).slice(0,-2)*this.props.magnifyRate}`})
+            }else{
+              this.setState({imgSize:e.target.naturalWidth})
+            }
+          }
+        }
+        onLargeImageLoad={(e)=>{
+            if(this.props.magnifyRate){
+              e.target.style.width=`${(style.width).slice(0,-2)*this.props.magnifyRate}px`;
+            }
+
+
+          }
+        }
       />
     </div>
     )
@@ -168,6 +182,7 @@ App.defaultProps = {
   "markOffsetY":25,
   "markHeight":50,
   "markWidth":50,
+  "magnifyRate":2,
   "marks":[
     {x:105,y:342,hoverText:"Hand"},
     {x:181,y:424,hoverText:"Leg"},
@@ -175,7 +190,8 @@ App.defaultProps = {
     {x:230,y:260,hoverText:"Abdomen"},
     {x:233,y:175,hoverText:"Chest"},
     {x:225,y:75,hoverText:"Face"}
-  ]
+  ],
+  "markImg":imgSearch
 }
 
 export default App
