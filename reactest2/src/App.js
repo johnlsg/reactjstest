@@ -1,18 +1,9 @@
-import React, {useState} from "react";
+import React, {createRef} from "react";
 import {
-  Magnifier,
   GlassMagnifier,
-  SideBySideMagnifier,
-  PictureInPictureMagnifier,
-  MOUSE_ACTIVATION,
-  TOUCH_ACTIVATION
 } from "react-image-magnifiers";
 import './app.css'
-const image = require('./image.jpg');
-const image2 = require('./image2.PNG');
-const imgCircle= require('./circle.png')
-const image3 = require('./image3.jpg')
-const imgSearch = require('./search.png')
+
 
 
 
@@ -33,17 +24,23 @@ class App extends React.Component{
       marks:marks,
       mx:0,
       my:0,
-      imgSize:0,
+      largeTmgWidth:0,
+      markOffsetX:this.props.markOffsetX?this.props.markOffsetX:this.props.markHeight*-0.5,
+      markOffsetY:this.props.markOffsetY?this.props.markOffsetY:this.props.markWidth*-0.5,
     };
   }
 
+  elemMainDiv = createRef();
 
-
-  ovl = (isZoom) =>{
+  overlay = (isZoom) =>{
     const handleClick = (e)=>{
-      const {offsetTop,offsetLeft} = document.getElementById("bodyMag")
-      let x = e.pageX-offsetLeft-this.props.markOffsetX-this.props.bodyMagBorderWidth
-      let y = e.pageY-offsetTop-this.props.markOffsetY-this.props.bodyMagBorderWidth
+      if(!this.props.editable){
+        return;
+      }
+      const {offsetTop,offsetLeft} = this.elemMainDiv.current
+      const borderWidth = Number(this.elemMainDiv.current.style.borderWidth.slice(0,-2))
+      let x = e.pageX-offsetLeft+this.state.markOffsetX-borderWidth
+      let y = e.pageY-offsetTop+this.state.markOffsetY-borderWidth
       let marker = this.state.marks.slice()
       marker.push({
         // id:markId,
@@ -54,21 +51,23 @@ class App extends React.Component{
         offsetX:0,
         offSetY:0
       })
-      this.setState({marks:marker})
+      this.props.onChange(marker)
+      // this.setState({marks:marker})
     }
 
     const handleMove = (e)=>{
-      const {offsetTop,offsetLeft,offsetWidth} = document.getElementById("bodyMag")
-      let cursorX = e.pageX-offsetLeft-this.props.bodyMagBorderWidth
-      let cursorY = e.pageY-offsetTop-this.props.bodyMagBorderWidth
+      const {offsetTop,offsetLeft,offsetWidth} = this.elemMainDiv.current
+      const borderWidth = Number(this.elemMainDiv.current.style.borderWidth.slice(0,-2))
+      let cursorX = e.pageX-offsetLeft-borderWidth
+      let cursorY = e.pageY-offsetTop-borderWidth
       this.setState({mx:cursorX,my:cursorY})
       const newMarks = this.state.marks.map((val)=>{
-        const markAnchorX = val.x+this.props.markOffsetX
-        const markAnchorY = val.y+this.props.markOffsetY
+        const markAnchorX = val.x-this.state.markOffsetX
+        const markAnchorY = val.y-this.state.markOffsetY
         const dist = Math.pow((markAnchorX) - (cursorX),2) + Math.pow((markAnchorY)-(cursorY), 2)
-        // magnifiedRange = glassMagnifierSizeInPercent * offsetWidth - 2*glassMagnifierBorderWidth
-        const magnifiedRange = (0.25*offsetWidth-6)/this.state.imgSize*offsetWidth
-        const magnifyRate = this.state.imgSize/offsetWidth
+        // magnifiedRange = (glassMagnifierSizeInPercent * offsetWidth - 2*glassMagnifierBorderWidth)/largeImgWidth*mainDivWidth
+        const magnifiedRange = (0.25*offsetWidth-6)/this.state.largeImgWidth*offsetWidth
+        const magnifyRate = this.state.largeImgWidth/offsetWidth
         if(dist< Math.pow(magnifiedRange/2,2)){
           const curX = cursorX
           const curY = cursorY
@@ -99,7 +98,7 @@ class App extends React.Component{
     return(
       <div style={style} onClick={handleClick} onMouseMove={handleMove}>
         <p>{this.state.mx},{this.state.my}</p>
-        {this.state.marks.map((value)=>{
+        {this.state.marks.map((value,index)=>{
           const styleMark = {
             width:this.props.markWidth,
             height:this.props.markHeight,
@@ -123,15 +122,26 @@ class App extends React.Component{
           }
 
           return (
-            <div className="markDiv" key={value.x*value.y} style={styleMarkDiv} onMouseOver={()=>{console.log("icon hovered")}}>
+            <div className="markDiv" key={index} style={styleMarkDiv}>
               <div className="hoverTxt" style={styleMarkHoverTxt}>
                 {value.hoverText}
               </div>
-              <img src={this.props.markImg} style={styleMark} onClick={(e)=>{e.stopPropagation(); console.log(`${value.x} ${value.y} clicked`)}}/>
+              <img src={this.props.markImg}
+                   style={styleMark}
+                   onClick={(e)=>{
+                     e.stopPropagation();
+                     const markObj = this.state.marks[index]
+                     this.props.onMarkClick({
+                       x:markObj.x,
+                       y:markObj.y,
+                       hoverText:markObj.hoverText
+                     })
+                     // console.log(`${value.x} ${value.y} ${index} clicked`)
+                   }}
+                   alt="Mark"
+              />
             </div>
             )
-
-
         })}
 
       </div>
@@ -140,58 +150,68 @@ class App extends React.Component{
 
   render(){
     const style = {
-      position:"absolute",
-      width:"500px",
-      borderStyle:"solid",
-      borderWidth:this.props.bodyMagBorderWidth,
-      overflow:"hidden"
+      overflow:"hidden",
+      ...this.props.style,
     }
     return (
-    <div id="bodyMag" style={style}>
+    <div style={style} ref={this.elemMainDiv}>
 
       <GlassMagnifier
-        imageSrc={image2}
-        imageAlt="Example"
-        renderOverlay={this.ovl}
+        imageSrc={this.props.image}
+        renderOverlay={this.overlay}
         cursorStyle="crosshair"
         onImageLoad={(e)=>{
             if(this.props.magnifyRate){
-              this.setState({imgSize:`${(style.width).slice(0,-2)*this.props.magnifyRate}`})
+              this.setState({largeImgWidth:`${this.elemMainDiv.current.offsetWidth*this.props.magnifyRate}`})
             }else{
-              this.setState({imgSize:e.target.naturalWidth})
+              this.setState({largeImgWidth:e.target.naturalWidth})
             }
           }
         }
         onLargeImageLoad={(e)=>{
             if(this.props.magnifyRate){
-              e.target.style.width=`${(style.width).slice(0,-2)*this.props.magnifyRate}px`;
+              e.target.style.width=`${this.elemMainDiv.current.offsetWidth*this.props.magnifyRate}px`;
             }
-
-
           }
         }
+        imgAlt={this.props.imgAlt}
       />
     </div>
     )
   }
 }
-
+/*
+Props
+"image": image to be shown and magnified
+"markImg": image to be used as marker
+"markHeight": Mark height
+"markWidth": Mark Width
+"markOffsetX": Offset marks in x axis, default to half of mark width
+"markOffsetY": Offset marks in y axis, default to half of mark height
+"magnifyRate": Rate of magnification to the image
+"marks": array with objects initializing marks on image
+[
+{x: #x coordinate of mark, y: #y corrdinate of mark, hoverText: #Text to be shown when cursor hover the mark},
+...
+]
+"editable":boolean, enable/disable addition of mark
+"onChange": callback function, pass new mark array as parameter, fire when new mark is added
+function onChangeHandler(newMarkArray){
+  //your code
+}
+"onMarkClick": callback function, pass object of mark being clicked, fire when mark clicked
+function onMarkClickHandler(markObj){
+  //your code
+}
+*/
 App.defaultProps = {
-  "bodyMagBorderWidth":3,
-  "markOffsetX":25,
-  "markOffsetY":25,
   "markHeight":50,
   "markWidth":50,
   "magnifyRate":2,
-  "marks":[
-    {x:105,y:342,hoverText:"Hand"},
-    {x:181,y:424,hoverText:"Leg"},
-    {x:166,y:209,hoverText:"Arm"},
-    {x:230,y:260,hoverText:"Abdomen"},
-    {x:233,y:175,hoverText:"Chest"},
-    {x:225,y:75,hoverText:"Face"}
-  ],
-  "markImg":imgSearch
+  "editable":false,
+  "onChange":()=>{},
+  "onMarkClick":()=>{},
+  "imgAlt":"Image",
 }
 
 export default App
