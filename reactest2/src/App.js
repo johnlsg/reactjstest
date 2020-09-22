@@ -32,7 +32,7 @@ class App extends React.Component{
 
   elemMainDiv = createRef();
 
-  overlay = (isZoom) =>{
+  overlay = () =>{
     const handleClick = (e)=>{
       if(!this.props.editable){
         return;
@@ -146,6 +146,20 @@ class App extends React.Component{
 
       </div>
     )
+  }
+
+  componentWillReceiveProps(nextProps){
+    if(nextProps.marks!==this.state.marks){
+      const marks = nextProps.marks ? nextProps.marks.map((val)=>{
+        return {
+          ...val,
+          isHide:false,
+          offsetX:0,
+          offSetY:0
+        }
+      }):[]
+      this.setState({marks:marks})
+    }
   }
 
   render(){

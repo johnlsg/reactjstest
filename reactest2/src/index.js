@@ -8,7 +8,7 @@ const imgSearch = require('./search.png')
 
 // ========================================
 
-const TestParent = (props)=>{
+const TestParent = ()=>{
 
   const [mark, setMark] = useState([
     {x:105,y:342,hoverText:"Hand"},
@@ -27,6 +27,7 @@ const TestParent = (props)=>{
         setEdit((prev) => !prev)
       }}>{`Edit ${isEdit?"on":"off"}`}
       </button>
+      <button onClick={()=>{setMark([])}}>clear</button>
       <App
         style={{
           width: "500px",
