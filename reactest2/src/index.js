@@ -20,14 +20,20 @@ const TestParent = ()=>{
   ])
   const [isEdit, setEdit] = useState(false)
 
-  console.log(mark)
+  // console.log(mark)
   return (
     <div>
       <button onClick={() => {
         setEdit((prev) => !prev)
       }}>{`Edit ${isEdit?"on":"off"}`}
       </button>
-      <button onClick={()=>{setMark([])}}>clear</button>
+      <button
+        onClick={()=>{
+          setMark(mark.filter(()=>{
+            return Math.random()>0.5
+          }))
+        }}
+      >clear</button>
       <App
         style={{
           width: "500px",

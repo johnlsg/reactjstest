@@ -1,11 +1,6 @@
 import React, {createRef} from "react";
-import {
-  GlassMagnifier,
-} from "react-image-magnifiers";
+import {GlassMagnifier,} from "react-image-magnifiers";
 import './app.css'
-
-
-
 
 
 class App extends React.Component{
@@ -51,8 +46,8 @@ class App extends React.Component{
         offsetX:0,
         offSetY:0
       })
+      this.setState({marks:marker})
       this.props.onChange(marker)
-      // this.setState({marks:marker})
     }
 
     const handleMove = (e)=>{
@@ -97,7 +92,7 @@ class App extends React.Component{
     }
     return(
       <div style={style} onClick={handleClick} onMouseMove={handleMove}>
-        <p>{this.state.mx},{this.state.my}</p>
+        {/*<p>{this.state.mx},{this.state.my}</p>*/}
         {this.state.marks.map((value,index)=>{
           const styleMark = {
             width:this.props.markWidth,
@@ -136,7 +131,6 @@ class App extends React.Component{
                        y:markObj.y,
                        hoverText:markObj.hoverText
                      })
-                     // console.log(`${value.x} ${value.y} ${index} clicked`)
                    }}
                    alt="Mark"
               />
@@ -148,17 +142,53 @@ class App extends React.Component{
     )
   }
 
-  componentWillReceiveProps(nextProps){
-    if(nextProps.marks!==this.state.marks){
-      const marks = nextProps.marks ? nextProps.marks.map((val)=>{
-        return {
-          ...val,
-          isHide:false,
-          offsetX:0,
-          offSetY:0
-        }
-      }):[]
-      this.setState({marks:marks})
+  cmpMark = (propMark, stateMark)=>{
+    if(propMark.x===stateMark.x && propMark.y===stateMark.y && propMark.hoverText===stateMark.hoverText){
+      return true
+    }
+    return false
+  }
+
+  UNSAFE_componentWillReceiveProps(nextProps) {
+    if (!nextProps.marks) {
+      console.log("markArr null undefined")
+      this.setState({marks: []})
+      return
+    }
+    if (nextProps.marks.length !== this.state.marks.length) {
+      let marks
+      if (nextProps.marks.length > this.state.marks.length) {
+        marks = nextProps.marks.map((val) => {
+          for(let i=0; i<this.state.marks.length;i++){
+            if(this.cmpMark(val, this.state.marks[i])){
+              const obj = this.state.marks[i]
+              return {
+                ...val,
+                isHide: obj.isHide,
+                offsetX: obj.offsetX,
+                offSetY: obj.offsetY
+              }
+            }
+          }
+            return {
+              ...val,
+              isHide: false,
+              offsetX: 0,
+              offSetY: 0
+            }
+
+        })
+      }else{
+        marks = this.state.marks.filter((val)=>{
+          for(let i=0; i<nextProps.marks.length;i++){
+             if(this.cmpMark(nextProps.marks[i], val)){
+               return true
+             }
+          }
+          return false
+        })
+      }
+      this.setState({marks: marks})
     }
   }
 
