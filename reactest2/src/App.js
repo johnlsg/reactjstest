@@ -28,14 +28,23 @@ class App extends React.Component{
   elemMainDiv = createRef();
 
   overlay = () =>{
+    console.log("ovl")
+    const markOffsetX = this.props.markOffsetX?this.props.markOffsetX:this.props.markHeight*-0.5
+    const markOffsetY = this.props.markOffsetY?this.props.markOffsetY:this.props.markWidth*-0.5
+    let borderWidth, offsetTop, offsetLeft, offsetWidth
+    if(this.elemMainDiv.current){
+      borderWidth = Number(this.elemMainDiv.current.style.borderWidth.slice(0,-2))
+      offsetTop= this.elemMainDiv.current.offsetTop
+      offsetLeft= this.elemMainDiv.current.offsetLeft
+      offsetWidth = this.elemMainDiv.current.offsetWidth
+    }
+
     const handleClick = (e)=>{
       if(!this.props.editable){
         return;
       }
-      const {offsetTop,offsetLeft} = this.elemMainDiv.current
-      const borderWidth = Number(this.elemMainDiv.current.style.borderWidth.slice(0,-2))
-      let x = e.pageX-offsetLeft+this.state.markOffsetX-borderWidth
-      let y = e.pageY-offsetTop+this.state.markOffsetY-borderWidth
+      let x = e.pageX-offsetLeft+markOffsetX-borderWidth
+      let y = e.pageY-offsetTop+markOffsetY-borderWidth
       let marker = this.state.marks.slice()
       marker.push({
         // id:markId,
@@ -51,8 +60,6 @@ class App extends React.Component{
     }
 
     const handleMove = (e)=>{
-      const {offsetTop,offsetLeft,offsetWidth} = this.elemMainDiv.current
-      const borderWidth = Number(this.elemMainDiv.current.style.borderWidth.slice(0,-2))
       let cursorX = e.pageX-offsetLeft-borderWidth
       let cursorY = e.pageY-offsetTop-borderWidth
       this.setState({mx:cursorX,my:cursorY})
@@ -64,12 +71,10 @@ class App extends React.Component{
         const magnifiedRange = (0.25*offsetWidth-6)/this.state.largeImgWidth*offsetWidth
         const magnifyRate = this.state.largeImgWidth/offsetWidth
         if(dist< Math.pow(magnifiedRange/2,2)){
-          const curX = cursorX
-          const curY = cursorY
-          const magX = (magnifyRate)*(markAnchorX-curX)
-          const magY = (magnifyRate)*(markAnchorY-curY)
-          const finalX = magX + curX
-          const finalY = magY + curY
+          const magX = (magnifyRate)*(markAnchorX-cursorX)
+          const magY = (magnifyRate)*(markAnchorY-cursorY)
+          const finalX = magX + cursorX
+          const finalY = magY + cursorY
           const diffX = finalX - markAnchorX
           const diffY = finalY - markAnchorY
           return {...val, isHide:false, offsetX: diffX, offsetY: diffY}
@@ -143,10 +148,8 @@ class App extends React.Component{
   }
 
   cmpMark = (propMark, stateMark)=>{
-    if(propMark.x===stateMark.x && propMark.y===stateMark.y && propMark.hoverText===stateMark.hoverText){
-      return true
-    }
-    return false
+    return propMark.x === stateMark.x && propMark.y === stateMark.y && propMark.hoverText === stateMark.hoverText;
+
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
