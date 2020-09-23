@@ -2,6 +2,29 @@ import React, {createRef} from "react";
 import {GlassMagnifier,} from "react-image-magnifiers";
 import './imageMagnifier.css'
 
+/*
+Props List
+"image": image to be shown and magnified
+"markImg": image to be used as marker
+"markHeight": Mark height
+"markWidth": Mark Width
+"markOffsetX": Offset marks in x axis, default to half of mark width
+"markOffsetY": Offset marks in y axis, default to half of mark height
+"magnifyRate": Rate of magnification to the image
+"marks": array with mark objects initializing marks on image
+[
+{x: #x coordinate of mark, y: #y coordinate of mark, hoverText: #Text to be shown when cursor hover the mark},
+...
+]
+"onClick": callback function, pass coordinate of point clicked, relative to elemMainDiv (the outermost <div> in this component) not including its border
+function onClickHandler(x, y){
+  //your code
+}
+"onMarkClick": callback function, pass object of mark being clicked, fire when mark clicked
+function onMarkClickHandler(markObj){
+  //your code
+}
+*/
 
 class ImageMagnifier extends React.Component{
   constructor(props) {
@@ -213,29 +236,7 @@ class ImageMagnifier extends React.Component{
     )
   }
 }
-/*
-Props
-"image": image to be shown and magnified
-"markImg": image to be used as marker
-"markHeight": Mark height
-"markWidth": Mark Width
-"markOffsetX": Offset marks in x axis, default to half of mark width
-"markOffsetY": Offset marks in y axis, default to half of mark height
-"magnifyRate": Rate of magnification to the image
-"marks": array with objects initializing marks on image
-[
-{x: #x coordinate of mark, y: #y corrdinate of mark, hoverText: #Text to be shown when cursor hover the mark},
-...
-]
-"onClick": callback function, pass coordinate of point clicked, relative to elemMainDiv (the outermost <div> in this component) not including its border
-function onClickHandler(x, y){
-  //your code
-}
-"onMarkClick": callback function, pass object of mark being clicked, fire when mark clicked
-function onMarkClickHandler(markObj){
-  //your code
-}
-*/
+
 ImageMagnifier.defaultProps = {
   "markHeight":50,
   "markWidth":50,
