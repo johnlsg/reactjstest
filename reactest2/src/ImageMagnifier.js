@@ -1,9 +1,9 @@
 import React, {createRef} from "react";
 import {GlassMagnifier,} from "react-image-magnifiers";
-import './app.css'
+import './imageMagnifier.css'
 
 
-class App extends React.Component{
+class ImageMagnifier extends React.Component{
   constructor(props) {
     super(props);
     const marks = props.marks ? props.marks.map((val)=>{
@@ -28,7 +28,6 @@ class App extends React.Component{
   elemMainDiv = createRef();
 
   overlay = () =>{
-    console.log("ovl")
     const markOffsetX = this.props.markOffsetX?this.props.markOffsetX:this.props.markHeight*-0.5
     const markOffsetY = this.props.markOffsetY?this.props.markOffsetY:this.props.markWidth*-0.5
     let borderWidth, offsetTop, offsetLeft, offsetWidth
@@ -40,23 +39,9 @@ class App extends React.Component{
     }
 
     const handleClick = (e)=>{
-      if(!this.props.editable){
-        return;
-      }
       let x = e.pageX-offsetLeft+markOffsetX-borderWidth
       let y = e.pageY-offsetTop+markOffsetY-borderWidth
-      let marker = this.state.marks.slice()
-      marker.push({
-        // id:markId,
-        x:x,
-        y:y,
-        hoverText:`This is mark ${x}, ${y}`,
-        isHide:false,
-        offsetX:0,
-        offSetY:0
-      })
-      this.setState({marks:marker})
-      this.props.onChange(marker)
+      this.props.onClick(x, y)
     }
 
     const handleMove = (e)=>{
@@ -97,7 +82,7 @@ class App extends React.Component{
     }
     return(
       <div style={style} onClick={handleClick} onMouseMove={handleMove}>
-        {/*<p>{this.state.mx},{this.state.my}</p>*/}
+        <p>{this.state.mx},{this.state.my}</p>
         {this.state.marks.map((value,index)=>{
           const styleMark = {
             width:this.props.markWidth,
@@ -153,6 +138,7 @@ class App extends React.Component{
   }
 
   UNSAFE_componentWillReceiveProps(nextProps) {
+    console.log(nextProps.marks)
     if (!nextProps.marks) {
       console.log("markArr null undefined")
       this.setState({marks: []})
@@ -241,9 +227,8 @@ Props
 {x: #x coordinate of mark, y: #y corrdinate of mark, hoverText: #Text to be shown when cursor hover the mark},
 ...
 ]
-"editable":boolean, enable/disable addition of mark
-"onChange": callback function, pass new mark array as parameter, fire when new mark is added
-function onChangeHandler(newMarkArray){
+"onClick": callback function, pass coordinate of point clicked, relative to elemMainDiv (the outermost <div> in this component) not including its border
+function onClickHandler(x, y){
   //your code
 }
 "onMarkClick": callback function, pass object of mark being clicked, fire when mark clicked
@@ -251,14 +236,14 @@ function onMarkClickHandler(markObj){
   //your code
 }
 */
-App.defaultProps = {
+ImageMagnifier.defaultProps = {
   "markHeight":50,
   "markWidth":50,
   "magnifyRate":2,
   "editable":false,
-  "onChange":()=>{},
+  "onClick":()=>{},
   "onMarkClick":()=>{},
   "imgAlt":"Image",
 }
 
-export default App
+export default ImageMagnifier
